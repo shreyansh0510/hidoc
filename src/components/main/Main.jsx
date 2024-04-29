@@ -1,24 +1,72 @@
 import {
+  Box,
+  Button,
   Card,
   CardActionArea,
   CardContent,
   Chip,
+  CircularProgress,
   Container,
   Divider,
   Grid,
   Typography,
+  createTheme,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../styles/variables.css";
 import "../../index.css";
+import { postService } from "../../api/postService";
 
 export default function Main() {
   const [selectLabel, setSelectLabel] = useState("");
+  const [drugsData, setDrugsData] = useState([]);
+  const [drugDetails, setDrugDetails] = useState("");
+
+  const [drugID, setDrugID] = useState(null);
+
+  const [isloader, setIsloader] = useState(false);
 
   const handleMeds = (label) => {
     console.log("handleMeds", label);
     setSelectLabel(label);
   };
+
+  const fetchDrugs = async () => {
+    try {
+      let responseDrug = await postService.getDrugs();
+      setDrugsData(responseDrug);
+    } catch (e) {
+      console.error("Error fetching posts", e);
+    }
+  };
+
+  const getDrugDetails = (id) => {
+    console.log("getDrugDetails", id);
+    console.log("drugsData?.data?.drugData?>>>>>", drugsData?.data?.drugData);
+    let filteredDrug = drugsData?.data?.drugData?.filter(
+      (drug) => drug.id === id
+    );
+    setDrugDetails(filteredDrug);
+  };
+
+  const handleButton = (id) => {
+    setIsloader(true);
+    setTimeout(() => {
+      setDrugID(id);
+      getDrugDetails(id);
+      setIsloader(false);
+    }, 500);
+  };
+
+  useEffect(() => {
+    fetchDrugs();
+
+    return () => {
+      // Cleanup logic if needed
+    };
+  }, []);
+
+  console.log("drugDetails", drugDetails);
 
   return (
     <>
@@ -153,25 +201,36 @@ export default function Main() {
                 <Divider />
                 <br />
 
-                <Typography variant="body1" color="text.secondary">
-                  Allegtra
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Calpol
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Paracetamol
-                </Typography>
-                <Typography
+                {drugsData?.data?.drugData?.map((drug) => (
+                  <>
+                    <Button
+                      sx={{
+                        fontSize: 12,
+                        fontWeight: 600,
+
+                        color: "rgb(49, 49, 49)",
+                        backgroundColor:
+                          drugID === drug.id
+                            ? "var(--button-hightlight)"
+                            : null,
+                      }}
+                      key={drug.id}
+                      onClick={() => handleButton(drug.id)}
+                    >
+                      {drug.drugName}
+                    </Button>
+                    <br />
+                  </>
+                ))}
+
+                {/* <Typography
                   variant="body1"
                   sx={{
                     backgroundColor: "var(--primary-color)",
                     fontWeight: 600,
                     borderRadius: 5,
                   }}
-                >
-                  Ferrum oxydatum pellet
-                </Typography>
+                ></Typography> */}
               </CardContent>
             </Card>
           </Grid>
@@ -195,17 +254,39 @@ export default function Main() {
                 <Divider />
                 <br />
 
-                <Typography
-                  variant="body1"
-                  sx={{ color: "var(--primary-color)", fontWeight: 600 }}
-                >
-                  Ferrum oxydatum pellet
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Kelatin, glycerin, polyethylene glycol, povidone, propylene
-                  glycol, purified water, sorbitol-sorbitan solution, titanium
-                  dioxide
-                </Typography>
+                {isloader ? (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CircularProgress
+                      sx={{ color: "var(--primary-color)" }}
+                      size={20}
+                    />
+                  </Box>
+                ) : drugID ? (
+                  <>
+                    <Typography
+                      variant="body1"
+                      sx={{ color: "var(--primary-color)", fontWeight: 600 }}
+                    >
+                      {drugDetails[0]?.drugName}
+                    </Typography>
+                    <br />
+                    <Typography variant="body1" color="text.secondary">
+                      {drugDetails[0]?.drugDetails}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography
+                    variant="body1"
+                    sx={{ color: "var(--primary-color)", fontWeight: 600 }}
+                  >
+                    Select Drug to view details ⚠️
+                  </Typography>
+                )}
               </CardContent>
             </Card>
           </Grid>

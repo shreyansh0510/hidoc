@@ -109,9 +109,8 @@ export default function header() {
         sx={{
           backgroundColor: "var(--tertiary-color)",
           width: "100%",
-          paddingBottom: 2,
-          paddingTop: 2,
           textAlign: "center",
+          padding: 5,
         }}
         xs={12}
       >
